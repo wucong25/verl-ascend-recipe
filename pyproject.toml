@@ -1,40 +1,62 @@
-# -------------------------------
-# build-system
-# -------------------------------
 [build-system]
+# Should be mirrored in requirements.txt
 requires = [
-    "setuptools>=61.0",
-    "wheel"
+    "attrs",
+    "cmake>=3.26",
+    "decorator",
+    "einops",
+    "googleapis-common-protos",
+    "numpy",
+    "packaging",
+    "pip",
+    "pybind11",
+    "pyyaml",
+    "scipy",
+    "pandas",
+    "pandas-stubs",
+    "psutil",
+    "setuptools>=64",
+    "setuptools-scm>=8",
+    "transformers==5.14.1",
+    "torch-npu==2.10.0.post7",
+    "torch==2.10.0",
+    "torchvision",
+    "wheel",
+    "msgpack",
+    "quart",
+    "numba",
+    "xgrammar>=0.1.30",
+    "fastapi<0.124.0",
+    "fastokens==0.2.0",
+    "compressed_tensors>=0.11.0",
+    "arctic-inference==0.1.1",
+    "memfabric-hybrid==1.3.0",
+    "memcache-hybrid==1.3.0",
+    "triton-ascend==3.6.0.post2"
 ]
 build-backend = "setuptools.build_meta"
 
-# -------------------------------
-# project (PEP 621 metadata)
-# -------------------------------
-[project]
-name = "verl"
-# We'll mark the version as "dynamic" because it's read from the file "verl/version/version" 
-# (PEP 621 calls this "dynamic version"). 
-# The actual version is specified in the [tool.setuptools.dynamic] section below.
-dynamic = ["version", "dependencies", "optional-dependencies", "authors", "urls"]
+[tool.uv.extra-build-dependencies]
+pandas = ["setuptools<72"]
 
-description = "verl: Volcano Engine Reinforcement Learning for LLM"
-license = {text = "Apache-2.0"}  # Changed from file to text format
-readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.10"
+[tool.pymarkdown]
+plugins.md004.style = "sublist" # ul-style
+plugins.md007.indent = 4 # ul-indent
+plugins.md007.start_indented = true # ul-indent
+plugins.md013.enabled = false # line-length
+plugins.md041.enabled = false # first-line-h1
+plugins.md033.enabled = false # inline-html
+plugins.md046.enabled = false # code-block-style
+plugins.md024.allow_different_nesting = true # no-duplicate-headers
+plugins.md029.enabled = false # ol-prefix
 
-# -------------------------------
-# tool.ruff - Linting configuration
-# -------------------------------
 [tool.ruff]
-# Note: While the formatter will attempt to format lines such that they remain within the line-length,
-# it isn't a hard upper bound, and formatted lines may exceed the line-length.
+# TODO: according to PEP8, there should be 120 characters per line
 line-length = 120
-exclude = ["tests/workers/rollout/test_sglang_async_rollout_sf_tools.py", "scripts/legacy_model_merger.py"]
+# Folder to be modified
+exclude = []
 
 [tool.ruff.lint]
-isort = {known-first-party = ["verl"]}
-# c.f. https://github.com/vllm-project/vllm/blob/ce8d6b75fc0586045df75ee1568a5b5f9957251b/pyproject.toml
 select = [
     # pycodestyle
     "E",
@@ -44,8 +66,11 @@ select = [
     "UP",
     # flake8-bugbear
     "B",
+    # flake8-simplify
+    "SIM",
     # isort
     "I",
+    # flake8-logging-format
     "G",
 ]
 ignore = [
@@ -53,61 +78,23 @@ ignore = [
     "F405", "F403",
     # lambda expression assignment
     "E731",
+    # zip without `strict=`
+    "B905",
     # Loop control variable not used within loop body
     "B007",
     # f-string format
     "UP032",
-    # `.log()` statement uses f-string
-    "G004",
-    # X | None for type annotations
-    "UP045",
-    # deprecated import
-    "UP035",
+    "B904",
+    "SIM108",
+    "SIM102"
 ]
+logger-objects = ["vllm.logger.logger"]
 
-# -------------------------------
-# tool.mypy - typechecking config
-# -------------------------------
-[tool.mypy]
-pretty            = true
-ignore_missing_imports = true
-explicit_package_bases = true
-follow_imports = "skip"
+[tool.ruff.format]
+docstring-code-format = true
 
-# Blanket silence
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = [
-"verl.trainer.config.algorithm",
-"verl.trainer.ppo.core_algos",
-"verl.trainer.ppo.reward",
-"verl.workers.reward_manager",
-"verl.workers.reward_manager.*",
-]
-ignore_errors = false
-
-# -------------------------------
-# tool.setuptools - Additional config
-# -------------------------------
-[tool.setuptools]
-# True means `setuptools` will attempt to include all relevant files in package_data automatically.
-# This corresponds to `include_package_data=True` in setup.py.
-include-package-data = true
-
-# We read the version from a file in 'verl/version/version'
-[tool.setuptools.dynamic]
-version = {file = "verl/version/version"}
-
-# If you need to mimic `package_dir={'': '.'}`:
-[tool.setuptools.package-dir]
-"" = "."
-
-# If you need to include specific non-Python data (like YAML files or version file):
-# This is the rough equivalent of package_data={'': ['version/*'], 'verl': ['trainer/config/*.yaml']}
-[tool.setuptools.package-data]
-verl = [
-  "version/*",
-  "trainer/config/*.yaml",
-  "trainer/config/*/*.yaml",
+[tool.pytest.ini_options]
+markers = [
+    "e2e_model: E2E test model identifier(s)",
+    "e2e_coverage: E2E test coverage dimensions (arch, feature, parallel, deploy, hardware, quantization, graph_mode)",
 ]
